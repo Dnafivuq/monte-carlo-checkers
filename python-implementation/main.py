@@ -8,16 +8,24 @@ import os
 ttt = Game()
 mcts1 = MCTS(ttt, 1, 800)
 mcts2 = MCTS(ttt, 1, 800)
+moves = []
+move_probs = []
+
 
 def run_sim():
     game_state = ttt.get_starting_state()
+    moves.clear()
+    move_probs.clear()
     while (True):
         move = mcts1.mcts_search(game_state)
+        moves.append(move)
+        move_probs.append([mcts1.get_move_probs()])
         game_state = ttt.make_move(game_state, move)
         # ttt.print_board(game_state)
         if (ttt.is_terminal(game_state)):
             return ttt.reward(game_state, Player.CROSS)
         move = mcts2.mcts_search(game_state)
+        moves.append(move)
         game_state = ttt.make_move(game_state, move)
         # ttt.print_board(game_state)
         if (ttt.is_terminal(game_state)):
@@ -27,6 +35,8 @@ def run_sim():
 def main():
     # start game
     os.system("clear")
+    lost_game_moves = []
+    lost_game_probs = []
     # game_state = ttt.get_starting_state()
 
     # while (True):
@@ -41,7 +51,24 @@ def main():
     #     game_state = ttt.make_move(game_state, player_move)
     outcomes = []
     for _ in tqdm(range(1000)):
-        outcomes.append(run_sim())
+        val = run_sim()
+        outcomes.append(val)
+        if val != 0:
+            lost_game_moves.append(moves)
+            lost_game_probs.append(move_probs)
+
+    with open("log.txt", 'w') as f:
+        for i in range(len(lost_game_moves)):
+            f.write(f"#### Lost game nr {i+1}\n")
+            f.write(" ".join(lost_game_moves[i]))
+            f.write('\n')
+            for c in range(len(lost_game_probs[i])):
+                print(lost_game_probs[i][c])
+                f.write("".join(lost_game_probs[i][c]))
+        f.close()
+
     print(Counter(outcomes))
+
+
 if __name__ == "__main__":
     main()
