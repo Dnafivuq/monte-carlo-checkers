@@ -4,12 +4,16 @@ from abc import ABC, abstractmethod
 Move: TypeAlias = str
 
 
-class Player:
-    pass
+class Player(ABC):
+    def __init__(self):
+        pass
 
 
 class GameState(ABC):
-    def __init__(self):
-        self.active_player = None
-        self.board = None
+    @abstractmethod
+    def get_player(self) -> Player:
+        pass
 
+    @abstractmethod
+    def get_board(self) -> str:
+        pass

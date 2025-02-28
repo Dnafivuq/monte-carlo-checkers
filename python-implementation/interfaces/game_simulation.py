@@ -1,5 +1,22 @@
 from abc import ABC, abstractmethod
-from game_state import GameState, Move, Player
+from .game_state import GameState, Move, Player
+# from typing import TypeAlias
+# Move: TypeAlias = str
+
+
+# class Player(ABC):
+#     def __init__(self):
+#         pass
+
+
+# class GameState(ABC):
+#     @abstractmethod
+#     def get_player(self) -> Player:
+#         pass
+
+#     @abstractmethod
+#     def get_board(self) -> str:
+#         pass
 
 
 class GameSimulation(ABC):
@@ -24,7 +41,7 @@ class GameSimulation(ABC):
         pass
 
     @abstractmethod
-    def reward(self, desired_winner: Player) -> int | None:
+    def reward(self, game_state: GameState, desired_winner: Player) -> int | None:
         # reward should return 1,0,-1 base on player value.
         # if player 1 won then reward is 1, if he lost then reward is -1
         # but if player -1 won then reward is -1, etc...

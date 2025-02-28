@@ -1,4 +1,4 @@
-from mcts_tree import MCTSTree as MCTS
+from .mcts import MCTSTree as MCTS
 from tictactoe import TicTacToe as Game
 from tictactoe import Player
 from tqdm import tqdm

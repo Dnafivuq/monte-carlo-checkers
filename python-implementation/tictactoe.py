@@ -1,7 +1,7 @@
-from enum import Enum
-from game_simulation import GameSimulation
-from game_state import GameState, Move
 import numpy as np
+from enum import Enum
+
+from interfaces import GameSimulation, GameState, Move
 
 
 class BoardSlot(Enum):
