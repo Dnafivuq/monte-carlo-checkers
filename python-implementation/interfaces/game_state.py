@@ -5,15 +5,10 @@ Move: TypeAlias = str
 
 
 class Player(ABC):
-    def __init__(self):
-        pass
+    pass
 
 
 class GameState(ABC):
     @abstractmethod
     def get_player(self) -> Player:
-        pass
-
-    @abstractmethod
-    def get_board(self) -> str:
         pass
