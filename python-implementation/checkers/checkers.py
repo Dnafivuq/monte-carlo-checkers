@@ -45,33 +45,77 @@ class Checkers(GameSimulation):
         board = game_state.get_board()
 
         if player == CheckersPlayer.WHITE:
-            for index, slot in enumerate(board, start=1):                        
+            for index, slot in enumerate(board, start=1):
                 if slot == CheckersPiece.WHITE:
 
                     # Which row, affects the index change
                     if index/4 % 2 == 0:
-                        if index % 8 != 5 and board[index-3]==CheckersPiece.EMPTY:
+                        if index % 8 != 5 and board[index-3] == CheckersPiece.EMPTY:
                             moves.append(str(index+"-"+index-3))
 
-                        if index % 8 != 4 and board[index-4]==CheckersPiece.EMPTY:
+                        if index % 8 != 4 and board[index-4] == CheckersPiece.EMPTY:
                             moves.append(str(index+"-"+index-4))
-                        
+
                     if index/4 % 2 == 1:
-                        if index % 8 != 5 and board[index-4]==CheckersPiece.EMPTY:
+                        if index % 8 != 5 and board[index-4] == CheckersPiece.EMPTY:
                             moves.append(str(index+"-"+index-4))
-                        if index % 8 != 4 and board[index-5]==CheckersPiece.EMPTY:
+                        if index % 8 != 4 and board[index-5] == CheckersPiece.EMPTY:
                             moves.append(str(index+"-"+index-5))
-    
+
         elif player == CheckersPlayer.BLACK:
-
-
+            pass
 
     def _get_captures(self, game_state: GameState) -> list[Move]:
         pass
 
+    def _get_diagonals(self, center_field_idx: int) -> tuple[list[int], list[int]]:
+        '''
+        Given a field idx, will return a list of idx which are on the diagonals
+        with it at the center.
+        '''
+        diagonal_tl_br = []  # top left to bottom right
+        diagonal_bl_tr = []  # bottom left to top right
+
+        conv_idx = center_field_idx * 2 + 1  # convert idx to be 0-63 for ease of use here
+
+        # get diagonals on left side of center field
+        if conv_idx % 8 != 0:
+            temp_idx = conv_idx
+            # get bottom left
+            while temp_idx % 8 != 0 and temp_idx < 56:
+                temp_idx += 7
+                diagonal_bl_tr.append(temp_idx)
+            # get top left
+            temp_idx = conv_idx
+            while temp_idx % 8 != 0 and temp_idx > 7:
+                temp_idx -= 9
+                diagonal_tl_br.append(temp_idx)
+        # get diagonals on right side of center field
+        if conv_idx % 7 != 0:
+            temp_idx = conv_idx
+            # get top right
+            while temp_idx % 7 != 0 and temp_idx > 7:
+                temp_idx -= 7
+                diagonal_bl_tr.append(temp_idx)
+            # get bottom right
+            temp_idx = conv_idx
+            while temp_idx % 7 != 0 and temp_idx < 56:
+                temp_idx += 9
+                diagonal_tl_br.append(temp_idx)
+
+        return diagonal_tl_br, diagonal_bl_tr
 
     def make_move(self, game_state: CheckersState, move: Move) -> GameState:
         # if we got here, we assume the move is a LEGAL one!
+
+        # setup things to make code player-agnostic
+        queen_piece = CheckersPiece.WHITE_QUEEN
+        pawn_piece = CheckersPiece.WHITE
+        promotion_fields = [0, 1, 2, 3]
+        if game_state.active_player == CheckersPlayer.BLACK:
+            queen_piece = CheckersPiece.BLACK_QUEEN
+            pawn_piece = CheckersPiece.BLACK
+            promotion_fields = [28, 29, 30, 31]
         
         # if move doesn't contain 'x', that means no capture took place.
         if 'x' not in move:
@@ -79,28 +123,20 @@ class Checkers(GameSimulation):
             # non-jump move can only have 2 fields, subtract one from each to make them indexes
             start_field_idx, final_field_idx = tuple(map(lambda x: int(x)-1, move_fields))
 
-            if game_state.active_player == CheckersPlayer.WHITE:
-                # check if queen made move or was created during move
-                if game_state.board[start_field_idx] == CheckersPiece.WHITE_QUEEN or final_field_idx < 4:
-                    game_state.board[final_field_idx] == CheckersPiece.WHITE_QUEEN
-                else:
-                    game_state.board[final_field_idx] == CheckersPiece.WHITE
-
+            if game_state.board[start_field_idx] == queen_piece or final_field_idx in promotion_fields:
+                game_state.board[final_field_idx] = queen_piece
             else:
-                # same but for black
-                if game_state.board[start_field_idx] == CheckersPiece.BLACK_QUEEN or final_field_idx > 27:
-                    game_state.board[final_field_idx] == CheckersPiece.BLACK_QUEEN
-                else:
-                    game_state.board[final_field_idx] == CheckersPiece.BLACK
+                game_state.board[final_field_idx] = pawn_piece
 
             game_state.board[start_field_idx] == CheckersPiece.EMPTY
             return game_state
         else:
             move_fields = move.split('x')
             start_field_idx, *mid_fields_idx, final_field_idx = tuple(map(lambda x: int(x)-1, move_fields))
-            
-            if game_state.active_player == CheckersPlayer.WHITE:
-                
+
+            # at least one jump took place. Remove pieces from fields which were hopped over.
+            hopped_fields = self._get_hopped_fields(move_fields)
+                  
 
 
     def make_random_move(self, game_state: GameState) -> GameState:
@@ -128,7 +164,7 @@ class Checkers(GameSimulation):
             [0, 0, 0, 0],
             [1, 1, 1, 1],
             [1, 1, 1, 1],
-            [1, 1, 1 ,1]
+            [1, 1, 1, 1]
         ])
                                
         )
