@@ -103,6 +103,10 @@ class Checkers(GameSimulation):
                 temp_idx += 9
                 diagonal_tl_br.append(temp_idx)
 
+        # convert back to idx
+        diagonal_bl_tr = tuple(map(lambda x: (x-1)/2, diagonal_bl_tr))
+        diagonal_tl_br = tuple(map(lambda x: (x-1)/2, diagonal_tl_br))
+
         return diagonal_tl_br, diagonal_bl_tr
 
     def make_move(self, game_state: CheckersState, move: Move) -> GameState:
