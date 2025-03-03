@@ -1,22 +1,5 @@
 from abc import ABC, abstractmethod
 from .game_state import GameState, Move, Player
-# from typing import TypeAlias
-# Move: TypeAlias = str
-
-
-# class Player(ABC):
-#     def __init__(self):
-#         pass
-
-
-# class GameState(ABC):
-#     @abstractmethod
-#     def get_player(self) -> Player:
-#         pass
-
-#     @abstractmethod
-#     def get_board(self) -> str:
-#         pass
 
 
 class GameSimulation(ABC):
