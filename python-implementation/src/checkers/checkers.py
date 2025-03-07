@@ -1,6 +1,6 @@
 import numpy as np
 
-from state import CheckersPlayer, CheckersPiece, CheckersState
+from .state import CheckersPlayer, CheckersPiece, CheckersState
 from ..interfaces import GameSimulation, GameState, Move
 
 
