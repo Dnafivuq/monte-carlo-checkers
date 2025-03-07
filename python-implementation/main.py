@@ -1,11 +1,11 @@
-from .mcts import MCTSTree as MCTS
-from tictactoe import TicTacToe as Game
-from tictactoe import Player
 from tqdm import tqdm
 from collections import Counter
 
+from src.mcts import MCTSTree as MCTS
+from src.tictactoe import TictactoeGame, Player
+
 # import os
-ttt = Game()
+ttt = TictactoeGame()
 mcts1 = MCTS(ttt, 1.41, 1600)
 mcts2 = MCTS(ttt, 1.41, 1600)
 

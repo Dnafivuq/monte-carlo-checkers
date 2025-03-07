@@ -9,6 +9,4 @@ class Player(ABC):
 
 
 class GameState(ABC):
-    @abstractmethod
-    def get_player(self) -> Player:
-        pass
+    pass

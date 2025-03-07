@@ -1,8 +1,8 @@
 import numpy as np
 from copy import deepcopy
 
-from ..mcts import MCTSNode
-from ..interfaces.game_state import GameState, Move, GameSimulation
+from .mcts_node import MCTSNode
+from ..interfaces import GameState, Move, GameSimulation
 
 
 class MCTSTree:

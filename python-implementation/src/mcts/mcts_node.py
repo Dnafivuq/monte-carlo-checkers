@@ -1,7 +1,7 @@
 from __future__ import annotations
-from ..interfaces import GameState, Move
 import math
 
+from ..interfaces import GameState, Move
 
 class MCTSNode:
     def __init__(self,
