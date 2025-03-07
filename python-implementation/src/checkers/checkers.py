@@ -1,6 +1,7 @@
 import numpy as np
 
-from state import CheckersPlayer, CheckersPiece, CheckersState
+from .board import CheckersPiece, Board
+from .state import CheckersPlayer, CheckersState
 from ..interfaces import GameSimulation, GameState, Move
 
 
@@ -23,124 +24,72 @@ class Checkers(GameSimulation):
         return (cnt_white == 0 or cnt_black == 0)
 
     def get_moves(self, game_state: GameState) -> list[Move]:
-        # przejscie po wszystkich pionkach i czy bicie?
-        # ruchy zwykle
-
         # go over all possible pieces and create a list of all possible moves until
         # a) we find a move where a player can take a piece - if so, we stop saving regular moves
         # b) we have found all possible moves
-
         # whenever we find a move, we save it in a list (?) using PDN
-        possible_moves = []
-        
-        # if game_state.get_player() == CheckersPlayer.WHITE:
-        #     for slot in game_state.get_board():
-        #         if slot == CheckersPiece.WHITE:
-               
-        # pass
-
-    def _get_standard_moves(self, game_state: GameState) -> list[Move]:
-        player = game_state.get_player()        
-        moves = []
-        board = game_state.get_board()
-
-        if player == CheckersPlayer.WHITE:
-            for index, slot in enumerate(board, start=1):
-                if slot == CheckersPiece.WHITE:
-                    pass
-
-        elif player == CheckersPlayer.BLACK:
-            pass
-
-    def _get_four_diagonal_neighbours(self, idx: int) -> list[int | None]:
-        # Returns the indexes of four diagonal neighbors or None if the move is not possible due to the board constraints.
-        moves = []
-        row = (idx - 1)/4
-
-        moves.append(self._get_left_up(idx, row))
-        moves.append(self._get_right_up(idx, row))
-        moves.append(self._get_left_down(idx, row))
-        moves.append(self._get_right_down(idx, row))
-
-    @staticmethod
-    def _get_left_up(idx: int, row: int) -> int | None:
-        if idx % 8 == 5 or idx <= 4:
-            return None
-        elif row % 2 == 0:
-            return idx - 4
-        else:
-            return idx - 5
-
-    @staticmethod
-    def _get_right_up(idx: int, row: int) -> int | None:
-        if idx % 8 == 4 or idx <= 4:
-            return None
-        elif row % 2 == 0:
-            return idx - 3
-        else:
-            return idx - 4
-
-    @staticmethod
-    def _get_left_down(idx: int, row: int) -> int | None:
-        if idx % 8 == 5 or idx >= 29:
-            return None
-        elif row % 2 == 0:
-            return idx + 4
-        else:
-            return idx + 3
-
-    @staticmethod
-    def _get_right_down(idx: int, row: int) -> int | None:
-        if idx % 8 == 4 or idx >= 29:
-            return None
-        elif row % 2 == 0:
-            return idx + 5
-        else:
-            return idx + 4
-
-    def _get_captures(self, game_state: GameState) -> list[Move]:
         pass
 
-    def _get_diagonals(self, center_field_idx: int) -> tuple[list[int], list[int]]:
-        '''
-        Given a field idx, will return a list of idx which are on the diagonals
-        with it at the center.
-        '''
-        diagonal_tl_br = []  # top left to bottom right
-        diagonal_bl_tr = []  # bottom left to top right
+    def _get_standard_moves(self, game_state: GameState) -> list[Move]:
+        player = game_state.get_player()       
+        board = game_state.get_board()
 
-        conv_idx = center_field_idx * 2 + 1  # convert idx to be 0-63 for ease of use here
+        moves = []
+        for index, slot in enumerate(board.squares):
 
-        # get diagonals on left side of center field
-        if conv_idx % 8 != 0:
-            temp_idx = conv_idx
-            # get bottom left
-            while temp_idx % 8 != 0 and temp_idx < 56:
-                temp_idx += 7
-                diagonal_bl_tr.append(temp_idx)
-            # get top left
-            temp_idx = conv_idx
-            while temp_idx % 8 != 0 and temp_idx > 7:
-                temp_idx -= 9
-                diagonal_tl_br.append(temp_idx)
-        # get diagonals on right side of center field
-        if conv_idx % 7 != 0:
-            temp_idx = conv_idx
-            # get top right
-            while temp_idx % 7 != 0 and temp_idx > 7:
-                temp_idx -= 7
-                diagonal_bl_tr.append(temp_idx)
-            # get bottom right
-            temp_idx = conv_idx
-            while temp_idx % 7 != 0 and temp_idx < 56:
-                temp_idx += 9
-                diagonal_tl_br.append(temp_idx)
+            if slot == CheckersPiece.WHITE and player == CheckersPlayer.WHITE:
+                tl_index, tr_index = self.board.get_top_indexes(index)
+                if tl_index is not None and self.board.get_piece(tl_index) == CheckersPiece.NONE:
+                    moves.append(str(index)+"-"+str(tl_index))
 
-        # convert back to idx
-        diagonal_bl_tr = tuple(map(lambda x: (x-1)/2, diagonal_bl_tr))
-        diagonal_tl_br = tuple(map(lambda x: (x-1)/2, diagonal_tl_br))
+            elif slot == CheckersPiece.BLACK and player == CheckersPlayer.BLACK:
+                tl_index, tr_index = self.board.get_top_indexes(index)
+                if tr_index is not None and self.board.get_piece(tr_index) == CheckersPiece.NONE:
+                    moves.append(str(index)+"-"+str(tl_index))
 
-        return diagonal_tl_br, diagonal_bl_tr
+        return moves
+
+    def _get_captures(self, game_state: GameState) -> list[Move]:
+        player = game_state.get_player()
+        board = game_state.get_board()
+
+        moves = []
+        for index, slot in enumerate(board.squares):
+            if player == CheckersPlayer.WHITE:
+                if slot == CheckersPiece.WHITE:
+                    moves.append(self._get_captures_piece(index, board))
+                elif slot == CheckersPiece.WHITE_QUEEN:
+                    moves.append(self._get_captures_queen(index, board))
+            else:
+                if slot == CheckersPiece.BLACK:
+                    moves.append(self._get_captures_piece(index, board))
+                elif slot == CheckersPiece.BLACK_QUEEN:
+                    moves.append(self._get_captures_queen(index, board))
+
+        return moves
+
+    def _get_captures_piece(self, string: str, index: int) -> list[Move]:
+        pass
+        # piece = board.get_piece(index)
+        # neighbours = board.get_neighbour_indexes(index)
+
+        # for direction, neighbour_idx in enumerate(neighbours):
+        #     neighbour_piece = board.get_piece(neighbour_idx)     
+        #     if neighbour_idx is not None and neighbour_piece in self.get_oponent_pieces(piece):
+        #         next_idx = board.get_single_neighbour_index(neighbour_idx, direction)
+        #         if board.get_piece(next_idx) == CheckersPiece.EMPTY:
+
+                
+
+    @staticmethod
+    def get_oponent_pieces(piece: CheckersPiece) -> tuple[CheckersPiece, CheckersPiece]:
+        if piece in (CheckersPiece.WHITE, CheckersPiece.WHITE_QUEEN):
+            return (CheckersPiece.BLACK, CheckersPiece.BLACK_QUEEN)
+        elif piece in (CheckersPiece.BLACK, CheckersPiece.BLACK_QUEEN):
+            return (CheckersPiece.WHITE, CheckersPiece.WHITE_QUEEN)
+
+    def _get_captures_queen(index) -> list[Move]:
+        pass
 
     def make_move(self, game_state: CheckersState, move: Move) -> GameState:
         # if we got here, we assume the move is a LEGAL one!
@@ -153,7 +102,7 @@ class Checkers(GameSimulation):
             queen_piece = CheckersPiece.BLACK_QUEEN
             pawn_piece = CheckersPiece.BLACK
             promotion_fields = [28, 29, 30, 31]
-        
+
         # if move doesn't contain 'x', that means no capture took place.
         if 'x' not in move:
             move_fields = move.split('-')
@@ -173,9 +122,7 @@ class Checkers(GameSimulation):
 
             # at least one jump took place. Remove pieces from fields which were hopped over.
             hopped_fields = self._get_hopped_fields(move_fields)
-                  
-
-
+             
     def make_random_move(self, game_state: GameState) -> GameState:
         random_move = np.random.choice(self.get_moves(game_state))
         return self.make_move(game_state, random_move)
@@ -183,16 +130,6 @@ class Checkers(GameSimulation):
     def get_starting_state(self) -> GameState:
         # white starts at the bottom
         active_player = CheckersPlayer.WHITE
-        # board = np.reshape([64], np.array([
-        #     [0, 2, 0, 2, 0, 2, 0, 2],
-        #     [2, 0, 2, 0, 2, 0, 2, 0],
-        #     [0, 2, 0, 2, 0, 2, 0, 2],
-        #     [0, 0, 0, 0, 0, 0, 0, 0],
-        #     [0, 0, 0, 0, 0, 0, 0, 0],
-        #     [1, 0, 1, 0, 1, 0, 1, 0],
-        #     [0, 1, 0, 1, 0, 1, 0, 1],
-        #     [1, 0, 1, 0, 1, 0, 1, 0]
-        # ]))
         board = np.reshape([32], np.array([
             [2, 2, 2, 2],
             [2, 2, 2, 2],
@@ -202,8 +139,7 @@ class Checkers(GameSimulation):
             [1, 1, 1, 1],
             [1, 1, 1, 1],
             [1, 1, 1, 1]
-        ])
-                               
+        ])                        
         )
         return GameState(active_player, board)
 
