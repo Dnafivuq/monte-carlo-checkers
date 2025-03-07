@@ -1,6 +1,6 @@
 import numpy as np
 
-from .state import CheckersPlayer, CheckersPiece, CheckersState
+from state import CheckersPlayer, CheckersPiece, CheckersState
 from ..interfaces import GameSimulation, GameState, Move
 
 
@@ -47,23 +47,56 @@ class Checkers(GameSimulation):
         if player == CheckersPlayer.WHITE:
             for index, slot in enumerate(board, start=1):
                 if slot == CheckersPiece.WHITE:
-
-                    # Which row, affects the index change
-                    if index/4 % 2 == 0:
-                        if index % 8 != 5 and board[index-3] == CheckersPiece.EMPTY:
-                            moves.append(str(index+"-"+index-3))
-
-                        if index % 8 != 4 and board[index-4] == CheckersPiece.EMPTY:
-                            moves.append(str(index+"-"+index-4))
-
-                    if index/4 % 2 == 1:
-                        if index % 8 != 5 and board[index-4] == CheckersPiece.EMPTY:
-                            moves.append(str(index+"-"+index-4))
-                        if index % 8 != 4 and board[index-5] == CheckersPiece.EMPTY:
-                            moves.append(str(index+"-"+index-5))
+                    pass
 
         elif player == CheckersPlayer.BLACK:
             pass
+
+    def _get_four_diagonal_neighbours(self, idx: int) -> list[int | None]:
+        # Returns the indexes of four diagonal neighbors or None if the move is not possible due to the board constraints.
+        moves = []
+        row = (idx - 1)/4
+
+        moves.append(self._get_left_up(idx, row))
+        moves.append(self._get_right_up(idx, row))
+        moves.append(self._get_left_down(idx, row))
+        moves.append(self._get_right_down(idx, row))
+
+    @staticmethod
+    def _get_left_up(idx: int, row: int) -> int | None:
+        if idx % 8 == 5 or idx <= 4:
+            return None
+        elif row % 2 == 0:
+            return idx - 4
+        else:
+            return idx - 5
+
+    @staticmethod
+    def _get_right_up(idx: int, row: int) -> int | None:
+        if idx % 8 == 4 or idx <= 4:
+            return None
+        elif row % 2 == 0:
+            return idx - 3
+        else:
+            return idx - 4
+
+    @staticmethod
+    def _get_left_down(idx: int, row: int) -> int | None:
+        if idx % 8 == 5 or idx >= 29:
+            return None
+        elif row % 2 == 0:
+            return idx + 4
+        else:
+            return idx + 3
+
+    @staticmethod
+    def _get_right_down(idx: int, row: int) -> int | None:
+        if idx % 8 == 4 or idx >= 29:
+            return None
+        elif row % 2 == 0:
+            return idx + 5
+        else:
+            return idx + 4
 
     def _get_captures(self, game_state: GameState) -> list[Move]:
         pass
