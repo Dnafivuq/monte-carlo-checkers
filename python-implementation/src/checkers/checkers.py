@@ -29,7 +29,12 @@ class Checkers(GameSimulation):
         # a) we find a move where a player can take a piece - if so, we stop saving regular moves
         # b) we have found all possible moves
         # whenever we find a move, we save it in a list (?) using PDN
-        pass
+        capture_moves = self._get_captures(game_state)
+
+        if len(capture_moves) > 0:
+            return capture_moves
+        else:
+            return self._get_standard_moves(game_state)
 
     def _get_standard_moves(self, game_state: GameState) -> list[Move]:
         player = game_state.get_player()       
@@ -56,31 +61,23 @@ class Checkers(GameSimulation):
 
         moves = []
         for index, slot in enumerate(board.squares):
-            if player == CheckersPlayer.WHITE:
-                if slot == CheckersPiece.WHITE:
-                    moves.append(self._get_captures_piece(index, board))
-                elif slot == CheckersPiece.WHITE_QUEEN:
-                    moves.append(self._get_captures_queen(index, board))
-            else:
-                if slot == CheckersPiece.BLACK:
-                    moves.append(self._get_captures_piece(index, board))
-                elif slot == CheckersPiece.BLACK_QUEEN:
-                    moves.append(self._get_captures_queen(index, board))
+            moves += self._get_square_captures(game_state, index, str(index))
 
         return moves
 
-    def _get_captures(self, game_state: GameState, index: int, move_string: str) -> list[Move]:
+    def _get_square_captures(self, game_state: GameState, index: int, move_string: str) -> list[Move]:
         # set up
         all_moves = []
         piece = game_state.board.get_piece(index)
 
+        # differentiating between normal pieces and queens
         if piece in (CheckersPiece.WHITE, CheckersPiece.BLACK):
-            neighbours = game_state.board.get_closest_indexes(index)
+            neighbour_indexes = game_state.board.get_closest_indexes(index)
         elif piece in (CheckersPiece.WHITE_QUEEN, CheckersPiece.BLACK_QUEEN):
-            neighbours = game_state.board.get_closest_ocupied_indexes(index)
+            neighbour_indexes = game_state.board.get_closest_ocupied_indexes(index)
     
         # check neighbours for oponent pieces
-        for direction_id, neighbour_index in enumerate(neighbours):
+        for direction_id, neighbour_index in enumerate(neighbour_indexes):
             neighbour_piece = game_state.board.get_piece(neighbour_index)   
             if neighbour_index is not None and neighbour_piece in self.get_oponent_pieces(piece):
 
