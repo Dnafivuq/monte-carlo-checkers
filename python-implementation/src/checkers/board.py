@@ -96,7 +96,7 @@ class Board:
             return None
         elif row % 2 == 0:
             return indx + 5
-        else:⛂ ⛀
+        else:
             return indx + 4
 
     # def _get_diagonals(self, center_field_idx: int) -> tuple[list[int], list[int]]:
