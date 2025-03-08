@@ -14,109 +14,131 @@ class Board:
         self.squares = squares
 
     def get_piece(self, index: int) -> CheckersPiece:
+        """
+        Get the piece at the given index.
+        """
         return self.squares[index]
 
-    def get_single_neighbour_index(self, idx, direction: int) -> list[int | None]:
+    def get_closest_index(self, indx, direction_id: int) -> list[int | None]:
         """
+        1 = TL, 2 = TR, 3 = BL, 4 = BR
         """
-        if direction == 0:  # TL
-            return self._get_left_up(idx)
-        elif direction == 1:  # TR
-            return self._get_right_up(idx)    
-        elif direction == 2:  # TL
-            return self._get_left_down(idx)
-        else:  # TL
-            return self._get_left_down(idx)
+        # Didn't bother with enum :3
+        if direction_id == 0:  # TL
+            return self._get_left_up(indx)
+        elif direction_id == 1:  # TR
+            return self._get_right_up(indx)    
+        elif direction_id == 2:  # BL
+            return self._get_left_down(indx)
+        elif direction_id == 3:  # BR
+            return self._get_left_down(indx)
 
-    def get_neighbour_indexes(self, idx: int) -> list[int | None]:
-        # Returns the indexes of four diagonal neighbors or None if the move
-        # is not possible due to the board constraints.
-        moves = []
-
-        moves.append(self._get_left_up(idx))
-        moves.append(self._get_right_up(idx))
-        moves.append(self._get_left_down(idx))
-        moves.append(self._get_right_down(idx))
-
-        return moves
-
-    @staticmethod
-    def _get_left_up(idx: int) -> int | None:
-        row = idx / 4
-        if idx % 8 == 4 or idx <= 3:
-            return None
-        elif row % 2 == 0:
-            return idx - 4
-        else:
-            return idx - 5
-
-    @staticmethod
-    def _get_right_up(idx: int) -> int | None:
-        row = idx / 4
-        if idx % 8 == 3 or idx <= 3:
-            return None
-        elif row % 2 == 0:
-            return idx - 3
-        else:
-            return idx - 4
+    def get_closest_indexes(self, indx: int) -> list[int | None]:
+        """
+        Retuns the indexes of four diagonal neighbors,
+        or Nones in case some are out of bounds.
+        """
+        return [
+            self._get_left_up(indx),
+            self._get_right_up(indx),
+            self._get_left_down(indx),
+            self._get_right_down(indx)
+        ]
+    
+    def get_closest_occupied_indexes(self, indx: int) -> list[int]:
+        """
+        Returns the indexes of the closest occupied
+        diagonal squares of the given index.
+        """
+        all_indxs = []
+        for new_indx, direction_id in zip(self.get_closest_indexes(indx), range(4)):
+            
+            while new_indx is not None and self.squares[new_indx] == CheckersPiece.EMPTY:
+                new_indx = self.get_closest_index(new_indx, direction_id)
+            
+            all_indxs.append(new_indx)
+        return all_indxs
 
     @staticmethod
-    def _get_left_down(idx: int) -> int | None:
-        row = idx / 4
-        if idx % 8 == 4 or idx >= 28:
+    def _get_left_up(indx: int) -> int | None:
+        row = indx / 4
+        if indx % 8 == 4 or indx <= 3:
             return None
         elif row % 2 == 0:
-            return idx + 4
+            return indx - 4
         else:
-            return idx + 3
+            return indx - 5
 
     @staticmethod
-    def _get_right_down(idx: int) -> int | None:
-        row = idx / 4
-        if idx % 8 == 3 or idx >= 28:
+    def _get_right_up(indx: int) -> int | None:
+        row = indx / 4
+        if indx % 8 == 3 or indx <= 3:
             return None
         elif row % 2 == 0:
-            return idx + 5
+            return indx - 3
         else:
-            return idx + 4
+            return indx - 4
 
-    def _get_diagonals(self, center_field_idx: int) -> tuple[list[int], list[int]]:
-        '''
-        Given a field idx, will return a list of idx which are on the diagonals
-        with it at the center.
-        '''
-        diagonal_tl_br = []  # top left to bottom right
-        diagonal_bl_tr = []  # bottom left to top right
+    @staticmethod
+    def _get_left_down(indx: int) -> int | None:
+        row = indx / 4
+        if indx % 8 == 4 or indx >= 28:
+            return None
+        elif row % 2 == 0:
+            return indx + 4
+        else:
+            return indx + 3
 
-        conv_idx = center_field_idx * 2 + 1  # convert idx to be 0-63 for ease of use here
+    @staticmethod
+    def _get_right_down(indx: int) -> int | None:
+        row = indx / 4
+        if indx % 8 == 3 or indx >= 28:
+            return None
+        elif row % 2 == 0:
+            return indx + 5
+        else:⛂ ⛀
+            return indx + 4
 
-        # get diagonals on left side of center field
-        if conv_idx % 8 != 0:
-            temp_idx = conv_idx
-            # get bottom left
-            while temp_idx % 8 != 0 and temp_idx < 56:
-                temp_idx += 7
-                diagonal_bl_tr.append(temp_idx)
-            # get top left
-            temp_idx = conv_idx
-            while temp_idx % 8 != 0 and temp_idx > 7:
-                temp_idx -= 9
-                diagonal_tl_br.append(temp_idx)
-        # get diagonals on right side of center field
-        if conv_idx % 7 != 0:
-            temp_idx = conv_idx
-            # get top right
-            while temp_idx % 7 != 0 and temp_idx > 7:
-                temp_idx -= 7
-                diagonal_bl_tr.append(temp_idx)
-            # get bottom right
-            temp_idx = conv_idx
-            while temp_idx % 7 != 0 and temp_idx < 56:
-                temp_idx += 9
-                diagonal_tl_br.append(temp_idx)
+    # def _get_diagonals(self, center_field_idx: int) -> tuple[list[int], list[int]]:
+    #     '''
+    #     Given a field indx, will return a list of indx which are on the diagonals
+    #     with it at the center.
+    #     '''
+    #     diagonal_tl, diagonal_tr = [], []
+    #     diagonal_bl, diagonal_br = [], []
 
-        # convert back to idx
-        diagonal_bl_tr = tuple(map(lambda x: (x-1)/2, diagonal_bl_tr))
-        diagonal_tl_br = tuple(map(lambda x: (x-1)/2, diagonal_tl_br))
+    #     conv_idx = center_field_idx * 2 + 1  # convert indx to be 0-63 for ease of use here
 
-        return diagonal_tl_br, diagonal_bl_tr
+    #     # get diagonals on left side of center field
+    #     if conv_idx % 8 != 0:
+    #         temp_idx = conv_idx
+    #         # get bottom left
+    #         while temp_idx % 8 != 0 and temp_idx < 56:
+    #             temp_idx += 7
+    #             diagonal_bl.append(temp_idx)
+    #         # get top left
+    #         temp_idx = conv_idx
+    #         while temp_idx % 8 != 0 and temp_idx > 7:
+    #             temp_idx -= 9
+    #             diagonal_tl.append(temp_idx)
+    #     # get diagonals on right side of center field
+    #     if conv_idx % 7 != 0:
+    #         temp_idx = conv_idx
+    #         # get top right
+    #         while temp_idx % 7 != 0 and temp_idx > 7:
+    #             temp_idx -= 7
+    #             diagonal_tr.append(temp_idx)
+    #         # get bottom right
+    #         temp_idx = conv_idx
+    #         while temp_idx % 7 != 0 and temp_idx < 56:
+    #             temp_idx += 9
+    #             diagonal_br.append(temp_idx)
+
+    #     # convert back to indx
+    #     diagonal_tl = tuple(map(lambda x: (x-1)/2, diagonal_tl))
+    #     diagonal_tr = tuple(map(lambda x: (x-1)/2, diagonal_tr))
+    #     diagonal_bl = tuple(map(lambda x: (x-1)/2, diagonal_bl))
+    #     diagonal_br = tuple(map(lambda x: (x-1)/2, diagonal_br))
+    #     return diagonal_tl, diagonal_tr, diagonal_bl, diagonal_br
+
+

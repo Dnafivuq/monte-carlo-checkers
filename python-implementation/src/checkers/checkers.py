@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 
 from .board import CheckersPiece, Board
 from .state import CheckersPlayer, CheckersState
@@ -68,18 +69,36 @@ class Checkers(GameSimulation):
 
         return moves
 
-    def _get_captures_piece(self, string: str, index: int) -> list[Move]:
-        pass
-        # piece = board.get_piece(index)
-        # neighbours = board.get_neighbour_indexes(index)
+    def _get_captures(self, game_state: GameState, index: int, move_string: str) -> list[Move]:
+        # set up
+        all_moves = []
+        piece = game_state.board.get_piece(index)
 
-        # for direction, neighbour_idx in enumerate(neighbours):
-        #     neighbour_piece = board.get_piece(neighbour_idx)     
-        #     if neighbour_idx is not None and neighbour_piece in self.get_oponent_pieces(piece):
-        #         next_idx = board.get_single_neighbour_index(neighbour_idx, direction)
-        #         if board.get_piece(next_idx) == CheckersPiece.EMPTY:
+        if piece in (CheckersPiece.WHITE, CheckersPiece.BLACK):
+            neighbours = game_state.board.get_closest_indexes(index)
+        elif piece in (CheckersPiece.WHITE_QUEEN, CheckersPiece.BLACK_QUEEN):
+            neighbours = game_state.board.get_closest_ocupied_indexes(index)
+    
+        # check neighbours for oponent pieces
+        for direction_id, neighbour_index in enumerate(neighbours):
+            neighbour_piece = game_state.board.get_piece(neighbour_index)   
+            if neighbour_index is not None and neighbour_piece in self.get_oponent_pieces(piece):
 
-                
+                # check tile behind oponent piece            
+                new_index = game_state.board.get_single_neighbour_index(neighbour_index, direction_id)
+                if game_state.board.get_piece(new_index) == CheckersPiece.EMPTY:
+                    
+                    # perform move & repeat
+                    whole_move = move_string + "x" + str(new_index)             # move leading from initial state
+                    new_move = str(index) + "x" + str(new_index)                # move leading from current state
+                    new_state = self.make_move(deepcopy(game_state), new_move)  # next state
+
+                    all_moves += self._get_captures_piece(new_state, new_index, whole_move)
+        
+        if len(all_moves) == 0:
+            return [move_string]
+        else:
+            return all_moves
 
     @staticmethod
     def get_oponent_pieces(piece: CheckersPiece) -> tuple[CheckersPiece, CheckersPiece]:
