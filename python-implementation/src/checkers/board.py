@@ -141,4 +141,39 @@ class Board:
     #     diagonal_br = tuple(map(lambda x: (x-1)/2, diagonal_br))
     #     return diagonal_tl, diagonal_tr, diagonal_bl, diagonal_br
 
+    def __str__(self):
+        empty = " "
+        white = "⛂"
+        black = "⛀"
+        top = " ┌─" + 7*"┬─" + "┐\n"
+        mid = " ├─" + 7*"┼─" + "┤\n"
+        bot = " └─" + 7*"┴─" + "┘\n"
 
+        string = top
+        for i in range(8):
+            row = " │"
+            for column in range(8):
+                if row % 2 == 0:
+                    if column % 2 == 0:
+                        piece = self.squares[i*8 + column]
+                    else:    
+                        piece = CheckersPiece.EMPTY
+                else:  
+                    if column % 2 == 0:
+                        piece = CheckersPiece.EMPTY
+                    else:    
+                        piece = self.squares[i*8 + column]
+
+                if piece == CheckersPiece.EMPTY:
+                    string += empty
+                elif piece in CheckersPiece.WHITE:
+                    string += white
+                elif piece == CheckersPiece.BLACK:
+                    string += black
+                row += "│"
+
+            string += row + "│\n" 
+            if i != 7:
+                string += mid
+        string += bot
+        return string
