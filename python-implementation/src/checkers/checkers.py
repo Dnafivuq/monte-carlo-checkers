@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
 
-from .board import CheckersPiece, Board
+from .board import CheckersPiece, CheckersBoard
 from .state import CheckersPlayer, CheckersState
 from ..interfaces import GameSimulation, GameState, Move
 
@@ -16,7 +16,7 @@ class Checkers(GameSimulation):
     def is_terminal(self, game_state: GameState) -> bool:
         cnt_white, cnt_black = 0, 0
 
-        for slot in game_state.get_board():
+        for slot in game_state.board.squares:
             if slot == CheckersPiece.WHITE or slot == CheckersPiece.WHITE_QUEEN:
                 cnt_white += 1
             elif slot == CheckersPiece.BLACK or slot == CheckersPiece.BLACK_QUEEN:
@@ -146,18 +146,17 @@ class Checkers(GameSimulation):
     def get_starting_state(self) -> GameState:
         # white starts at the bottom
         active_player = CheckersPlayer.WHITE
-        board = np.reshape([32], np.array([
-            [2, 2, 2, 2],
-            [2, 2, 2, 2],
-            [2, 2, 2, 2],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, 1, 1, 1]
-        ])                        
-        )
-        return GameState(active_player, board)
+        board = CheckersBoard(np.array([
+            CheckersPiece.BLACK, CheckersPiece.BLACK, CheckersPiece.BLACK, CheckersPiece.BLACK,
+            CheckersPiece.BLACK, CheckersPiece.BLACK, CheckersPiece.BLACK, CheckersPiece.BLACK,
+            CheckersPiece.BLACK, CheckersPiece.BLACK, CheckersPiece.BLACK, CheckersPiece.BLACK,
+            CheckersPiece.EMPTY, CheckersPiece.EMPTY, CheckersPiece.EMPTY, CheckersPiece.EMPTY,
+            CheckersPiece.EMPTY, CheckersPiece.EMPTY, CheckersPiece.EMPTY, CheckersPiece.EMPTY,
+            CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE,
+            CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE,
+            CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE,
+        ]).flatten())
+        return GameState(board, active_player)
 
     def reward(self) -> int:
         pass
