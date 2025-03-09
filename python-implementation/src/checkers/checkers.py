@@ -44,24 +44,31 @@ class Checkers(GameSimulation):
         for index, slot in enumerate(board.squares):
 
             if slot == CheckersPiece.WHITE and player == CheckersPlayer.WHITE:
-                tl_index, tr_index = self.board.get_top_indexes(index)
-                if tl_index is not None and self.board.get_piece(tl_index) == CheckersPiece.NONE:
+                tl_index, tr_index = game_state.board._get_left_up(index), game_state.board._get_right_up(index)
+                if tl_index != None and game_state.board.get_piece(tl_index) == CheckersPiece.EMPTY:
                     moves.append(str(index)+"-"+str(tl_index))
+                    moves.append(str(index)+"-"+str(tr_index))
 
             elif slot == CheckersPiece.BLACK and player == CheckersPlayer.BLACK:
-                tl_index, tr_index = self.board.get_top_indexes(index)
-                if tr_index is not None and self.board.get_piece(tr_index) == CheckersPiece.NONE:
+                tl_index, tr_index = game_state.board._get_left_down(index), game_state.board._get_right_down(index)
+                if tr_index != None and game_state.board.get_piece(tr_index) == CheckersPiece.EMPTY:
                     moves.append(str(index)+"-"+str(tl_index))
+                    moves.append(str(index)+"-"+str(tr_index))
 
         return moves
 
-    def _get_captures(self, game_state: GameState) -> list[Move]:
+    def _get_captures(self, game_state: CheckersState) -> list[Move]:
         player = game_state.get_player()
         board = game_state.get_board()
 
         moves = []
         for index, slot in enumerate(board.squares):
-            moves += self._get_square_captures(game_state, index, str(index))
+            if (
+                (slot == CheckersPiece.WHITE and player == CheckersPlayer.WHITE)
+                or
+                (slot == CheckersPiece.BLACK and player == CheckersPlayer.BLACK)
+            ):
+                moves += self._get_square_captures(game_state, index, str(index))
 
         return moves
 
@@ -75,24 +82,26 @@ class Checkers(GameSimulation):
             neighbour_indexes = game_state.board.get_closest_indexes(index)
         elif piece in (CheckersPiece.WHITE_QUEEN, CheckersPiece.BLACK_QUEEN):
             neighbour_indexes = game_state.board.get_closest_ocupied_indexes(index)
-    
+
         # check neighbours for oponent pieces
         for direction_id, neighbour_index in enumerate(neighbour_indexes):
-            neighbour_piece = game_state.board.get_piece(neighbour_index)   
-            if neighbour_index is not None and neighbour_piece in self.get_oponent_pieces(piece):
+            if neighbour_index is not None:
 
-                # check tile behind oponent piece            
-                new_index = game_state.board.get_single_neighbour_index(neighbour_index, direction_id)
-                if game_state.board.get_piece(new_index) == CheckersPiece.EMPTY:
-                    
-                    # perform move & repeat
-                    whole_move = move_string + "x" + str(new_index)             # move leading from initial state
-                    new_move = str(index) + "x" + str(new_index)                # move leading from current state
-                    new_state = self.make_move(deepcopy(game_state), new_move)  # next state
+                neighbour_piece = game_state.board.get_piece(neighbour_index)   
+                if neighbour_piece in self.get_oponent_pieces(piece):
 
-                    all_moves += self._get_captures_piece(new_state, new_index, whole_move)
-        
-        if len(all_moves) == 0:
+                    # check tile behind oponent piece            
+                    new_index = game_state.board.get_closest_index(neighbour_index, direction_id)
+                    if game_state.board.get_piece(new_index) == CheckersPiece.EMPTY:
+                        
+                        # perform move & repeat
+                        whole_move = move_string + "x" + str(new_index)             # move leading from initial state
+                        new_move = str(index) + "x" + str(new_index)                # move leading from current state
+                        new_state = self.make_move(deepcopy(game_state), new_move)  # next state
+
+                        all_moves += self._get_captures_piece(new_state, new_index, whole_move)
+            
+        if len(all_moves) == 0 and 'x' in move_string:
             return [move_string]
         else:
             return all_moves
@@ -114,7 +123,7 @@ class Checkers(GameSimulation):
         queen_piece = CheckersPiece.WHITE_QUEEN
         pawn_piece = CheckersPiece.WHITE
         promotion_fields = [0, 1, 2, 3]
-        if game_state.active_player == CheckersPlayer.BLACK:
+        if game_state.get_player() == CheckersPlayer.BLACK:
             queen_piece = CheckersPiece.BLACK_QUEEN
             pawn_piece = CheckersPiece.BLACK
             promotion_fields = [28, 29, 30, 31]
@@ -123,18 +132,18 @@ class Checkers(GameSimulation):
         if 'x' not in move:
             move_fields = move.split('-')
             # non-jump move can only have 2 fields, subtract one from each to make them indexes
-            start_field_idx, final_field_idx = tuple(map(lambda x: int(x)-1, move_fields))
+            start_field_idx, final_field_idx = tuple(map(lambda x: int(x), move_fields))
 
-            if game_state.board[start_field_idx] == queen_piece or final_field_idx in promotion_fields:
-                game_state.board[final_field_idx] = queen_piece
+            if game_state.board.get_piece(start_field_idx) == queen_piece or final_field_idx in promotion_fields:
+                game_state.board.get_piece(final_field_idx, queen_piece)
             else:
-                game_state.board[final_field_idx] = pawn_piece
+                game_state.board.set_piece(final_field_idx, pawn_piece)
 
-            game_state.board[start_field_idx] == CheckersPiece.EMPTY
+            game_state.board.set_piece(start_field_idx, CheckersPiece.EMPTY)
             return game_state
         else:
             move_fields = move.split('x')
-            start_field_idx, *mid_fields_idx, final_field_idx = tuple(map(lambda x: int(x)-1, move_fields))
+            start_field_idx, *mid_fields_idx, final_field_idx = tuple(map(lambda x: int(x), move_fields))
 
             # at least one jump took place. Remove pieces from fields which were hopped over.
             hopped_fields = self._get_hopped_fields(move_fields)
@@ -156,7 +165,7 @@ class Checkers(GameSimulation):
             CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE,
             CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE, CheckersPiece.WHITE,
         ]).flatten())
-        return GameState(board, active_player)
+        return CheckersState(board, active_player)
 
     def reward(self) -> int:
         pass

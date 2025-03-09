@@ -12,7 +12,6 @@ class CheckersState(GameState):
     def __init__(self, board: Board, active_player: CheckersPlayer):
         self.board = board
         self.active_player = active_player
-        pass
     
     def get_player(self) -> CheckersPlayer:
         return self.active_player
