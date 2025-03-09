@@ -61,7 +61,7 @@ class CheckersBoard(GameState):
 
     @staticmethod
     def _get_left_up(indx: int) -> int | None:
-        row = indx / 4
+        row = int(indx / 4)
         if indx % 8 == 4 or indx <= 3:
             return None
         elif row % 2 == 0:
@@ -71,7 +71,7 @@ class CheckersBoard(GameState):
 
     @staticmethod
     def _get_right_up(indx: int) -> int | None:
-        row = indx / 4
+        row = int(indx / 4)
         if indx % 8 == 3 or indx <= 3:
             return None
         elif row % 2 == 0:
@@ -81,7 +81,7 @@ class CheckersBoard(GameState):
 
     @staticmethod
     def _get_left_down(indx: int) -> int | None:
-        row = indx / 4
+        row = int(indx / 4)
         if indx % 8 == 4 or indx >= 28:
             return None
         elif row % 2 == 0:
@@ -91,7 +91,7 @@ class CheckersBoard(GameState):
 
     @staticmethod
     def _get_right_down(indx: int) -> int | None:
-        row = indx / 4
+        row = int(indx / 4)
         if indx % 8 == 3 or indx >= 28:
             return None
         elif row % 2 == 0:
