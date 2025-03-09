@@ -18,6 +18,12 @@ class CheckersBoard(GameState):
         Get the piece at the given index.
         """
         return self.squares[index]
+    
+    def set_piece(self, index: int, piece: CheckersPiece):
+        """
+        Set the piece at the given index.
+        """
+        self.squares[index] = piece
 
     def get_closest_index(self, indx, direction_id: int) -> list[int | None]:
         """
@@ -142,37 +148,37 @@ class CheckersBoard(GameState):
     #     return diagonal_tl, diagonal_tr, diagonal_bl, diagonal_br
 
     def __str__(self):
-        empty = " "
-        white = "⛂"
-        black = "⛀"
-        top = " ┌─" + 7*"┬─" + "┐\n"
-        mid = " ├─" + 7*"┼─" + "┤\n"
-        bot = " └─" + 7*"┴─" + "┘\n"
+        empty = "   "
+        white = " ⛂ "
+        black = " ⛀ "
+        top = " ┌───" + 7*"┬───" + "┐\n"
+        mid = " ├───" + 7*"┼───" + "┤\n"
+        bot = " └───" + 7*"┴───" + "┘\n"
 
         string = top
         for i in range(8):
             row = " │"
-            for column in range(8):
-                if row % 2 == 0:
-                    if column % 2 == 0:
-                        piece = self.squares[i*8 + column]
+            for j in range(8):
+                if i % 2 == 0:
+                    if j % 2 == 1:
+                        piece = self.squares[int(i*4) + int(j/2)]
                     else:    
                         piece = CheckersPiece.EMPTY
-                else:  
-                    if column % 2 == 0:
+                else:
+                    if j % 2 == 0:
+                        piece = self.squares[int(i*4) + int(j/2)]
+                    else:
                         piece = CheckersPiece.EMPTY
-                    else:    
-                        piece = self.squares[i*8 + column]
 
                 if piece == CheckersPiece.EMPTY:
-                    string += empty
-                elif piece in CheckersPiece.WHITE:
-                    string += white
+                    row += empty
+                elif piece == CheckersPiece.WHITE:
+                    row += white
                 elif piece == CheckersPiece.BLACK:
-                    string += black
+                    row += black
                 row += "│"
 
-            string += row + "│\n" 
+            string += row + "\n" 
             if i != 7:
                 string += mid
         string += bot
