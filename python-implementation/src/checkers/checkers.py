@@ -47,13 +47,22 @@ class Checkers(GameSimulation):
                 tl_index, tr_index = game_state.board._get_left_up(index), game_state.board._get_right_up(index)
                 if tl_index != None and game_state.board.get_piece(tl_index) == CheckersPiece.EMPTY:
                     moves.append(str(index)+"-"+str(tl_index))
+                if tr_index != None and game_state.board.get_piece(tr_index) == CheckersPiece.EMPTY:
                     moves.append(str(index)+"-"+str(tr_index))
 
             elif slot == CheckersPiece.BLACK and player == CheckersPlayer.BLACK:
                 tl_index, tr_index = game_state.board._get_left_down(index), game_state.board._get_right_down(index)
                 if tr_index != None and game_state.board.get_piece(tr_index) == CheckersPiece.EMPTY:
-                    moves.append(str(index)+"-"+str(tl_index))
                     moves.append(str(index)+"-"+str(tr_index))
+                if tl_index != None and game_state.board.get_piece(tl_index) == CheckersPiece.EMPTY:
+                    moves.append(str(index)+"-"+str(tl_index))
+
+            elif ((slot == CheckersPiece.WHITE_QUEEN and player == CheckersPlayer.WHITE)
+                or (slot == CheckersPiece.BLACK_QUEEN and player == CheckersPlayer.BLACK)
+            ):
+                movables = game_state.board.get_all_free_indexes(index)
+                for new_index in movables:
+                    moves.append(str(index)+"-"+str(new_index))
 
         return moves
 
@@ -64,15 +73,15 @@ class Checkers(GameSimulation):
         moves = []
         for index, slot in enumerate(board.squares):
             if (
-                (slot == CheckersPiece.WHITE and player == CheckersPlayer.WHITE)
+                (slot in (CheckersPiece.WHITE, CheckersPiece.WHITE_QUEEN) and player == CheckersPlayer.WHITE)
                 or
-                (slot == CheckersPiece.BLACK and player == CheckersPlayer.BLACK)
+                (slot in (CheckersPiece.BLACK, CheckersPiece.BLACK_QUEEN) and player == CheckersPlayer.BLACK)
             ):
                 moves += self._get_square_captures(game_state, index, str(index))
 
         return moves
 
-    def _get_square_captures(self, game_state: GameState, index: int, move_string: str) -> list[Move]:
+    def _get_square_captures(self, game_state: CheckersState, index: int, move_string: str) -> list[Move]:
         # set up
         all_moves = []
         piece = game_state.board.get_piece(index)
@@ -81,7 +90,7 @@ class Checkers(GameSimulation):
         if piece in (CheckersPiece.WHITE, CheckersPiece.BLACK):
             neighbour_indexes = game_state.board.get_closest_indexes(index)
         elif piece in (CheckersPiece.WHITE_QUEEN, CheckersPiece.BLACK_QUEEN):
-            neighbour_indexes = game_state.board.get_closest_ocupied_indexes(index)
+            neighbour_indexes = game_state.board.get_closest_occupied_indexes(index)
 
         # check neighbours for oponent pieces
         for direction_id, neighbour_index in enumerate(neighbour_indexes):
@@ -99,7 +108,7 @@ class Checkers(GameSimulation):
                         new_move = str(index) + "x" + str(new_index)                # move leading from current state
                         new_state = self.make_move(deepcopy(game_state), new_move)  # next state
 
-                        all_moves += self._get_captures_piece(new_state, new_index, whole_move)
+                        all_moves += self._get_square_captures(new_state, new_index, whole_move)
             
         if len(all_moves) == 0 and 'x' in move_string:
             return [move_string]
@@ -112,9 +121,6 @@ class Checkers(GameSimulation):
             return (CheckersPiece.BLACK, CheckersPiece.BLACK_QUEEN)
         elif piece in (CheckersPiece.BLACK, CheckersPiece.BLACK_QUEEN):
             return (CheckersPiece.WHITE, CheckersPiece.WHITE_QUEEN)
-
-    def _get_captures_queen(index) -> list[Move]:
-        pass
 
     def make_move(self, game_state: CheckersState, move: Move) -> GameState:
         # if we got here, we assume the move is a LEGAL one!
@@ -135,7 +141,7 @@ class Checkers(GameSimulation):
             start_field_idx, final_field_idx = tuple(map(lambda x: int(x), move_fields))
 
             if game_state.board.get_piece(start_field_idx) == queen_piece or final_field_idx in promotion_fields:
-                game_state.board.get_piece(final_field_idx, queen_piece)
+                game_state.board.set_piece(final_field_idx, queen_piece)
             else:
                 game_state.board.set_piece(final_field_idx, pawn_piece)
 
@@ -146,8 +152,25 @@ class Checkers(GameSimulation):
             start_field_idx, *mid_fields_idx, final_field_idx = tuple(map(lambda x: int(x), move_fields))
 
             # at least one jump took place. Remove pieces from fields which were hopped over.
-            hopped_fields = self._get_hopped_fields(move_fields)
-             
+            fields_inbetween = []
+            for i in range(len(move_fields)-1):
+                fields_inbetween += self._get_inbetween_fields(game_state, int(move_fields[i]), int(move_fields[i+1]))
+            for field in fields_inbetween:
+                game_state.board.set_piece(field, CheckersPiece.EMPTY)
+
+            game_state.board.set_piece(final_field_idx, game_state.board.get_piece(start_field_idx))
+            game_state.board.set_piece(start_field_idx, CheckersPiece.EMPTY)
+        
+        return game_state
+        
+    def _get_inbetween_fields(self, state: CheckersState, start_field: int, final_field: int) -> int:
+        for dir_pair in [[0, 3], [3, 0], [1, 2], [2, 1]]:
+            dir1, dir2 = dir_pair[0], dir_pair[1]
+            diagonal = state.board._get_diagonal(start_field, dir1)        
+            if final_field in diagonal:
+                opposite_diagonal = state.board._get_diagonal(final_field, dir2)
+                return [field for field in opposite_diagonal if field in diagonal]
+
     def make_random_move(self, game_state: GameState) -> GameState:
         random_move = np.random.choice(self.get_moves(game_state))
         return self.make_move(game_state, random_move)
@@ -168,4 +191,8 @@ class Checkers(GameSimulation):
         return CheckersState(board, active_player)
 
     def reward(self) -> int:
-        pass
+        for slot in game_state.board.squares:
+            if slot == CheckersPiece.WHITE:
+                return 1
+            elif slot == CheckersPiece.BLACK:
+                return -1

@@ -37,8 +37,8 @@ class CheckersBoard(GameState):
         elif direction_id == 2:  # BL
             return self._get_left_down(indx)
         elif direction_id == 3:  # BR
-            return self._get_left_down(indx)
-
+            return self._get_right_down(indx)
+        
     def get_closest_indexes(self, indx: int) -> list[int | None]:
         """
         Retuns the indexes of four diagonal neighbors,
@@ -64,6 +64,21 @@ class CheckersBoard(GameState):
             
             all_indxs.append(new_indx)
         return all_indxs
+    
+    def get_all_free_indexes(self, indx,) -> list[int]:
+        """
+        Returns all the indexes of the free diagonal
+        squares of the given index.
+        """
+        all_indxs = []
+        for new_indx, direction_id in zip(self.get_closest_indexes(indx), range(4)):
+            
+            while new_indx is not None and self.get_piece(new_indx) == CheckersPiece.EMPTY:
+                all_indxs.append(new_indx)
+                new_indx = self.get_closest_index(new_indx, direction_id)
+            
+        return all_indxs
+
 
     @staticmethod
     def _get_left_up(indx: int) -> int | None:
@@ -105,52 +120,24 @@ class CheckersBoard(GameState):
         else:
             return indx + 4
 
-    # def _get_diagonals(self, center_field_idx: int) -> tuple[list[int], list[int]]:
-    #     '''
-    #     Given a field indx, will return a list of indx which are on the diagonals
-    #     with it at the center.
-    #     '''
-    #     diagonal_tl, diagonal_tr = [], []
-    #     diagonal_bl, diagonal_br = [], []
-
-    #     conv_idx = center_field_idx * 2 + 1  # convert indx to be 0-63 for ease of use here
-
-    #     # get diagonals on left side of center field
-    #     if conv_idx % 8 != 0:
-    #         temp_idx = conv_idx
-    #         # get bottom left
-    #         while temp_idx % 8 != 0 and temp_idx < 56:
-    #             temp_idx += 7
-    #             diagonal_bl.append(temp_idx)
-    #         # get top left
-    #         temp_idx = conv_idx
-    #         while temp_idx % 8 != 0 and temp_idx > 7:
-    #             temp_idx -= 9
-    #             diagonal_tl.append(temp_idx)
-    #     # get diagonals on right side of center field
-    #     if conv_idx % 7 != 0:
-    #         temp_idx = conv_idx
-    #         # get top right
-    #         while temp_idx % 7 != 0 and temp_idx > 7:
-    #             temp_idx -= 7
-    #             diagonal_tr.append(temp_idx)
-    #         # get bottom right
-    #         temp_idx = conv_idx
-    #         while temp_idx % 7 != 0 and temp_idx < 56:
-    #             temp_idx += 9
-    #             diagonal_br.append(temp_idx)
-
-    #     # convert back to indx
-    #     diagonal_tl = tuple(map(lambda x: (x-1)/2, diagonal_tl))
-    #     diagonal_tr = tuple(map(lambda x: (x-1)/2, diagonal_tr))
-    #     diagonal_bl = tuple(map(lambda x: (x-1)/2, diagonal_bl))
-    #     diagonal_br = tuple(map(lambda x: (x-1)/2, diagonal_br))
-    #     return diagonal_tl, diagonal_tr, diagonal_bl, diagonal_br
+    def _get_diagonal(self, indx: int, direction_id: int) -> list[int]:
+        """
+        Returns the indexes of the diagonal squares
+        in the given direction.
+        """
+        all_indxs = []
+        new_indx = self.get_closest_index(indx, direction_id)
+        while new_indx is not None:
+            all_indxs.append(new_indx)
+            new_indx = self.get_closest_index(new_indx, direction_id)
+        return all_indxs
 
     def __str__(self):
         empty = "   "
         white = " ⛂ "
+        white_queen = " ⛃ "
         black = " ⛀ "
+        black_queen = " ⛁ "
         top = " ┌───" + 7*"┬───" + "┐\n"
         mid = " ├───" + 7*"┼───" + "┤\n"
         bot = " └───" + 7*"┴───" + "┘\n"
@@ -176,6 +163,10 @@ class CheckersBoard(GameState):
                     row += white
                 elif piece == CheckersPiece.BLACK:
                     row += black
+                elif piece == CheckersPiece.WHITE_QUEEN:
+                    row += white_queen
+                elif piece == CheckersPiece.BLACK_QUEEN:
+                    row += black_queen
                 row += "│"
 
             string += row + "\n" 

@@ -34,14 +34,20 @@ def run_sim():
         
 def play_checkers():
     game = Checkers()
-    board = CheckersBoard([CheckersPiece.EMPTY] * 32)
-    board.set_piece(0, CheckersPiece.BLACK)
-    board.set_piece(31, CheckersPiece.WHITE)
-    state = CheckersState(board, CheckersPlayer.WHITE)
+    # board = CheckersBoard([CheckersPiece.EMPTY] * 32)
+    # board.set_piece(5, CheckersPiece.BLACK_QUEEN)
+    # board.set_piece(0, CheckersPiece.WHITE_QUEEN)
+    # state = CheckersState(board, CheckersPlayer.WHITE)
+    state = game.get_starting_state()
     while (True):
         moves = game.get_moves(state)
         move = random.choice(moves)
         state = game.make_move(state, move)
+
+        if state.get_player() == CheckersPlayer.WHITE:
+            state.active_player = CheckersPlayer.BLACK
+        else:
+            state.active_player = CheckersPlayer.WHITE
 
         system("clear")
         print(state.board)
