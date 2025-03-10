@@ -82,7 +82,6 @@ class Checkers(GameSimulation):
         return moves
 
     def _get_square_captures(self, game_state: CheckersState, index: int, move_string: str) -> list[Move]:
-        # set up
         all_moves = []
         piece = game_state.board.get_piece(index)
 
@@ -94,21 +93,24 @@ class Checkers(GameSimulation):
 
         # check neighbours for oponent pieces
         for direction_id, neighbour_index in enumerate(neighbour_indexes):
-            if neighbour_index is not None:
+            if neighbour_index is None:
+                continue   
+            if game_state.board.get_piece(neighbour_index) not in self.get_oponent_pieces(piece):
+                continue
 
-                neighbour_piece = game_state.board.get_piece(neighbour_index)   
-                if neighbour_piece in self.get_oponent_pieces(piece):
+            # check tile behind oponent piece            
+            new_index = game_state.board.get_closest_index(neighbour_index, direction_id)
+            if new_index is None:
+                continue
+            if game_state.board.get_piece(new_index) != CheckersPiece.EMPTY:
+                continue
+                
+            # perform move & repeat
+            whole_move = move_string + "x" + str(new_index)             # move leading from initial state
+            new_move = str(index) + "x" + str(new_index)                # move leading from current state
+            new_state = self.make_move(deepcopy(game_state), new_move)  # next state
 
-                    # check tile behind oponent piece            
-                    new_index = game_state.board.get_closest_index(neighbour_index, direction_id)
-                    if game_state.board.get_piece(new_index) == CheckersPiece.EMPTY:
-                        
-                        # perform move & repeat
-                        whole_move = move_string + "x" + str(new_index)             # move leading from initial state
-                        new_move = str(index) + "x" + str(new_index)                # move leading from current state
-                        new_state = self.make_move(deepcopy(game_state), new_move)  # next state
-
-                        all_moves += self._get_square_captures(new_state, new_index, whole_move)
+            all_moves += self._get_square_captures(new_state, new_index, whole_move)
             
         if len(all_moves) == 0 and 'x' in move_string:
             return [move_string]
@@ -190,7 +192,7 @@ class Checkers(GameSimulation):
         ]).flatten())
         return CheckersState(board, active_player)
 
-    def reward(self) -> int:
+    def reward(self, game_state: CheckersState) -> int:
         for slot in game_state.board.squares:
             if slot == CheckersPiece.WHITE:
                 return 1

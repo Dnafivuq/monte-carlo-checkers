@@ -6,7 +6,13 @@ import time
 
 from src.mcts import MCTSTree as MCTS
 from src.tictactoe import TictactoeGame, Player
-from src.checkers import Checkers, CheckersBoard, CheckersPiece, CheckersState, CheckersPlayer
+from src.checkers import (
+    Checkers,
+    CheckersBoard,
+    CheckersPiece,
+    CheckersState,
+    CheckersPlayer,
+)
 
 # import os
 ttt = TictactoeGame()
@@ -16,30 +22,27 @@ mcts2 = MCTS(ttt, 1.41, 1600)
 
 def run_sim():
     game_state = ttt.get_starting_state()
-    while (True):
+    while True:
         move = mcts1.mcts_search(game_state)
         game_state = ttt.make_move(game_state, move)
         # ttt.print_board(game_state)
-        if (ttt.is_terminal(game_state)):
-            if (ttt.reward(game_state, Player.CIRCLE) != 0):
+        if ttt.is_terminal(game_state):
+            if ttt.reward(game_state, Player.CIRCLE) != 0:
                 ttt.print_board(game_state)
             return ttt.reward(game_state, Player.CROSS)
         move = mcts2.mcts_search(game_state)
         game_state = ttt.make_move(game_state, move)
         # ttt.print_board(game_state)
-        if (ttt.is_terminal(game_state)):
-            if (ttt.reward(game_state, Player.CIRCLE) != 0):
+        if ttt.is_terminal(game_state):
+            if ttt.reward(game_state, Player.CIRCLE) != 0:
                 ttt.print_board(game_state)
             return ttt.reward(game_state, Player.CROSS)
-        
+
+
 def play_checkers():
     game = Checkers()
-    # board = CheckersBoard([CheckersPiece.EMPTY] * 32)
-    # board.set_piece(5, CheckersPiece.BLACK_QUEEN)
-    # board.set_piece(0, CheckersPiece.WHITE_QUEEN)
-    # state = CheckersState(board, CheckersPlayer.WHITE)
     state = game.get_starting_state()
-    while (True):
+    while True:
         moves = game.get_moves(state)
         move = random.choice(moves)
         state = game.make_move(state, move)
@@ -53,10 +56,11 @@ def play_checkers():
         print(state.board)
         print(moves)
         print(move)
-        
+
         if game.is_terminal(state):
             print(game.reward(state))
             break
+
 
 def main():
     # os.system("clear")
