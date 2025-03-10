@@ -13,7 +13,7 @@ class Checkers(GameSimulation):
     Should we store this a single move, or rather as a sequence?
     """
 
-    def is_terminal(self, game_state: GameState) -> bool:
+    def is_terminal(self, game_state: CheckersState) -> bool:
         cnt_white, cnt_black = 0, 0
 
         for slot in game_state.board.squares:
@@ -22,9 +22,16 @@ class Checkers(GameSimulation):
             elif slot == CheckersPiece.BLACK or slot == CheckersPiece.BLACK_QUEEN:
                 cnt_black += 1
 
-        return (cnt_white == 0 or cnt_black == 0)
+        return (cnt_white == 0 or cnt_black == 0 or self._is_draw(game_state))
 
-    def get_moves(self, game_state: GameState) -> list[Move]:
+    
+    def _is_draw(self, game_state: CheckersState) -> bool:
+        if game_state.get_player() == CheckersPlayer.WHITE:
+            return len(self.get_moves(game_state)) == 0
+        else:
+            return len(self.get_moves(game_state)) == 0
+
+    def get_moves(self, game_state: CheckersState) -> list[Move]:
         # go over all possible pieces and create a list of all possible moves until
         # a) we find a move where a player can take a piece - if so, we stop saving regular moves
         # b) we have found all possible moves
@@ -36,7 +43,7 @@ class Checkers(GameSimulation):
         else:
             return self._get_standard_moves(game_state)
 
-    def _get_standard_moves(self, game_state: GameState) -> list[Move]:
+    def _get_standard_moves(self, game_state:  CheckersState) -> list[Move]:
         player = game_state.get_player()       
         board = game_state.get_board()
 
@@ -124,7 +131,7 @@ class Checkers(GameSimulation):
         elif piece in (CheckersPiece.BLACK, CheckersPiece.BLACK_QUEEN):
             return (CheckersPiece.WHITE, CheckersPiece.WHITE_QUEEN)
 
-    def make_move(self, game_state: CheckersState, move: Move) -> GameState:
+    def make_move(self, game_state: CheckersState, move: Move) -> CheckersState:
         # if we got here, we assume the move is a LEGAL one!
 
         # setup things to make code player-agnostic
@@ -173,11 +180,11 @@ class Checkers(GameSimulation):
                 opposite_diagonal = state.board._get_diagonal(final_field, dir2)
                 return [field for field in opposite_diagonal if field in diagonal]
 
-    def make_random_move(self, game_state: GameState) -> GameState:
+    def make_random_move(self, game_state: CheckersState) -> CheckersState:
         random_move = np.random.choice(self.get_moves(game_state))
         return self.make_move(game_state, random_move)
 
-    def get_starting_state(self) -> GameState:
+    def get_starting_state(self) -> CheckersState:
         # white starts at the bottom
         active_player = CheckersPlayer.WHITE
         board = CheckersBoard(np.array([
@@ -193,6 +200,9 @@ class Checkers(GameSimulation):
         return CheckersState(board, active_player)
 
     def reward(self, game_state: CheckersState) -> int:
+        if self._is_draw(game_state):
+            return 0
+        
         for slot in game_state.board.squares:
             if slot == CheckersPiece.WHITE:
                 return 1
