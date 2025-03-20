@@ -72,12 +72,21 @@ class Checkers(GameSimulation):
 
     
     def _is_draw(self, game_state: CheckersState) -> bool:
-        if game_state.get_player() == CheckersPlayer.WHITE:
-            return len(self.get_moves(game_state)) == 0
-        else:
-            return len(self.get_moves(game_state)) == 0
+        avaible_moves = self.get_moves(game_state)
+        avaible_pieces = self._check_piece(game_state, game_state.get_player())
 
-
+        if len(avaible_moves) == 0:
+            if avaible_pieces:
+                return True
+            return False
+        return False
+    
+    def _check_piece(self, game_state: CheckersState, owner: CheckersPlayer) -> bool:
+        for slot in game_state.get_board().get_squares():
+            if slot in self._pieces_from_player(owner):
+                return True
+        return False
+    
     def _standard_moves(self, game_state:  CheckersState) -> list[Move]:
         player = game_state.get_player()       
         board = game_state.get_board()
@@ -232,3 +241,9 @@ class Checkers(GameSimulation):
             if final_field in diagonal:
                 opposite_diagonal = state.board._get_diagonal(final_field, dir2)
                 return [field for field in opposite_diagonal if field in diagonal]
+            
+    def _switch_player(self, state: CheckersState):
+        if state.get_player() == CheckersPlayer.WHITE:
+            state.active_player = CheckersPlayer.BLACK
+        else:
+            state.active_player = CheckersPlayer.WHITE

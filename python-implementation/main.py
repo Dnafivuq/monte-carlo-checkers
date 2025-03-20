@@ -3,9 +3,9 @@ from collections import Counter
 from os import system
 import random
 import time
+from copy import deepcopy
 
 from src.mcts import MCTSTree as MCTS
-from src.tictactoe import TictactoeGame, Player
 from src.checkers import (
     Checkers,
     CheckersBoard,
@@ -15,7 +15,7 @@ from src.checkers import (
 )
 
 # import os
-ttt = TictactoeGame()
+ttt = Checkers()
 mcts1 = MCTS(ttt, 1.41, 1600)
 mcts2 = MCTS(ttt, 1.41, 1600)
 
@@ -46,6 +46,7 @@ def play_checkers():
         moves = game.get_moves(state)
         move = random.choice(moves)
         state = game.make_move(state, move)
+        BRUH = deepcopy(state)
 
         if state.get_player() == CheckersPlayer.WHITE:
             state.active_player = CheckersPlayer.BLACK
@@ -58,6 +59,7 @@ def play_checkers():
         print(move)
 
         if game.is_terminal(state):
+            game.make_move(BRUH, move)
             print(game.reward(state))
             break
 
