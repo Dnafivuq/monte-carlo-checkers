@@ -1,6 +1,7 @@
 from enum import Enum
 from ..interfaces import GameState
 
+
 class CheckersPiece(Enum):
     EMPTY = 0
     WHITE = 1
@@ -13,12 +14,18 @@ class CheckersBoard(GameState):
     def __init__(self, squares):
         self.squares = squares
 
+    def get_squares(self) -> list[CheckersPiece]:
+        """
+        Returns the squares of the board.
+        """
+        return self.squares
+
     def get_piece(self, index: int) -> CheckersPiece:
         """
         Get the piece at the given index.
         """
         return self.squares[index]
-    
+
     def set_piece(self, index: int, piece: CheckersPiece):
         """
         Set the piece at the given index.
@@ -33,12 +40,12 @@ class CheckersBoard(GameState):
         if direction_id == 0:  # TL
             return self._get_left_up(indx)
         elif direction_id == 1:  # TR
-            return self._get_right_up(indx)    
+            return self._get_right_up(indx)
         elif direction_id == 2:  # BL
             return self._get_left_down(indx)
         elif direction_id == 3:  # BR
             return self._get_right_down(indx)
-        
+
     def get_closest_indexes(self, indx: int) -> list[int | None]:
         """
         Retuns the indexes of four diagonal neighbors,
@@ -48,9 +55,9 @@ class CheckersBoard(GameState):
             self._get_left_up(indx),
             self._get_right_up(indx),
             self._get_left_down(indx),
-            self._get_right_down(indx)
+            self._get_right_down(indx),
         ]
-    
+
     def get_closest_occupied_indexes(self, indx: int) -> list[int]:
         """
         Returns the indexes of the closest occupied
@@ -58,27 +65,33 @@ class CheckersBoard(GameState):
         """
         all_indxs = []
         for new_indx, direction_id in zip(self.get_closest_indexes(indx), range(4)):
-            
-            while new_indx is not None and self.squares[new_indx] == CheckersPiece.EMPTY:
+
+            while (
+                new_indx is not None and self.squares[new_indx] == CheckersPiece.EMPTY
+            ):
                 new_indx = self.get_closest_index(new_indx, direction_id)
-            
+
             all_indxs.append(new_indx)
         return all_indxs
-    
-    def get_all_free_indexes(self, indx,) -> list[int]:
+
+    def get_all_free_indexes(
+        self,
+        indx,
+    ) -> list[int]:
         """
         Returns all the indexes of the free diagonal
         squares of the given index.
         """
         all_indxs = []
         for new_indx, direction_id in zip(self.get_closest_indexes(indx), range(4)):
-            
-            while new_indx is not None and self.get_piece(new_indx) == CheckersPiece.EMPTY:
+
+            while (
+                new_indx is not None and self.get_piece(new_indx) == CheckersPiece.EMPTY
+            ):
                 all_indxs.append(new_indx)
                 new_indx = self.get_closest_index(new_indx, direction_id)
-            
-        return all_indxs
 
+        return all_indxs
 
     @staticmethod
     def _get_left_up(indx: int) -> int | None:
@@ -138,9 +151,9 @@ class CheckersBoard(GameState):
         white_queen = " ⛃ "
         black = " ⛀ "
         black_queen = " ⛁ "
-        top = " ┌───" + 7*"┬───" + "┐\n"
-        mid = " ├───" + 7*"┼───" + "┤\n"
-        bot = " └───" + 7*"┴───" + "┘\n"
+        top = " ┌───" + 7 * "┬───" + "┐\n"
+        mid = " ├───" + 7 * "┼───" + "┤\n"
+        bot = " └───" + 7 * "┴───" + "┘\n"
 
         string = top
         for i in range(8):
@@ -148,12 +161,12 @@ class CheckersBoard(GameState):
             for j in range(8):
                 if i % 2 == 0:
                     if j % 2 == 1:
-                        piece = self.squares[int(i*4) + int(j/2)]
-                    else:    
+                        piece = self.squares[int(i * 4) + int(j / 2)]
+                    else:
                         piece = CheckersPiece.EMPTY
                 else:
                     if j % 2 == 0:
-                        piece = self.squares[int(i*4) + int(j/2)]
+                        piece = self.squares[int(i * 4) + int(j / 2)]
                     else:
                         piece = CheckersPiece.EMPTY
 
@@ -169,7 +182,7 @@ class CheckersBoard(GameState):
                     row += black_queen
                 row += "│"
 
-            string += row + "\n" 
+            string += row + "\n"
             if i != 7:
                 string += mid
         string += bot

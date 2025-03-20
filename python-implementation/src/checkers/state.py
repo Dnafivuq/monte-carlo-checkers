@@ -1,5 +1,5 @@
 from enum import Enum
-from .board import CheckersBoard as Board
+from .board import CheckersBoard
 from ..interfaces import GameState
 
 
@@ -9,12 +9,12 @@ class CheckersPlayer(Enum):
 
 
 class CheckersState(GameState):
-    def __init__(self, board: Board, active_player: CheckersPlayer):
+    def __init__(self, board: CheckersBoard, active_player: CheckersPlayer):
         self.board = board
         self.active_player = active_player
-    
+
     def get_player(self) -> CheckersPlayer:
         return self.active_player
-    
-    def get_board(self) -> Board:
+
+    def get_board(self) -> CheckersBoard:
         return self.board
