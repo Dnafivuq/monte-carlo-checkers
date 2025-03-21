@@ -57,19 +57,20 @@ class Checkers(GameSimulation):
 
         return white_absent or black_absent or self._is_draw(game_state)
     
-    def reward(self, game_state: CheckersState) -> int:
+    def reward(self, game_state: CheckersState, player: CheckersPlayer) -> int:
         """
         Returns the reward for the game with white player as the maximizing player.
         """
         if self._is_draw(game_state):
             return 0
         
+        mod = 1 if player == CheckersPlayer.WHITE else -1
+
         for slot in game_state.get_board().get_squares():
             if slot in self._pieces_from_player(CheckersPlayer.WHITE):
-                return 1
+                return 1 * mod
             elif slot in self._pieces_from_player(CheckersPlayer.BLACK):
-                return -1
-
+                return -1 * mod
     
     def _is_draw(self, game_state: CheckersState) -> bool:
         avaible_moves = self.get_moves(game_state)
@@ -226,11 +227,8 @@ class Checkers(GameSimulation):
             game_state.board.set_piece(final_field_idx, game_state.board.get_piece(start_field_idx))
         game_state.board.set_piece(start_field_idx, CheckersPiece.EMPTY)
 
-        # Switch turn
-        if game_state.get_player() == CheckersPlayer.WHITE:
-            game_state.active_player = CheckersPlayer.BLACK
-        else:
-            game_state.active_player = CheckersPlayer.WHITE
+        # Switch player
+        game_state = self._switch_player(game_state)
 
         return game_state
        
