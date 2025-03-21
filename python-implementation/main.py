@@ -1,9 +1,10 @@
-from tqdm import tqdm
-from collections import Counter
-from os import system
+import numpy as np
 import random
-import time
+from os import system
+from tqdm import tqdm
+from time import sleep
 from copy import deepcopy
+from collections import Counter
 
 from src.mcts import MCTSTree as MCTS
 from src.checkers import (
@@ -14,44 +15,32 @@ from src.checkers import (
     CheckersPlayer,
 )
 
-# import os
-ttt = Checkers()
-mcts1 = MCTS(ttt, 1.41, 1600)
-mcts2 = MCTS(ttt, 1.41, 1600)
+game = Checkers()
+mcts1 = MCTS(game, 1.41, 200)
+mcts2 = MCTS(game, 1.41, 1600)
 
 
 def run_sim():
-    game_state = ttt.get_starting_state()
+    state = game.get_starting_state()
     while True:
-        move = mcts1.mcts_search(game_state)
-        game_state = ttt.make_move(game_state, move)
-        # ttt.print_board(game_state)
-        if ttt.is_terminal(game_state):
-            if ttt.reward(game_state, Player.CIRCLE) != 0:
-                ttt.print_board(game_state)
-            return ttt.reward(game_state, Player.CROSS)
-        move = mcts2.mcts_search(game_state)
-        game_state = ttt.make_move(game_state, move)
-        # ttt.print_board(game_state)
-        if ttt.is_terminal(game_state):
-            if ttt.reward(game_state, Player.CIRCLE) != 0:
-                ttt.print_board(game_state)
-            return ttt.reward(game_state, Player.CROSS)
+        move = mcts1.mcts_search(state)
+        state = game.make_move(state, move)
+        if game.is_terminal(state):
+            return game.reward(state, CheckersPlayer.WHITE)
+
+        move = mcts2.mcts_search(state)
+        state = game.make_move(state, move)
+        if game.is_terminal(state):
+            return game.reward(state, CheckersPlayer.BLACK)
 
 
-def play_checkers():
+def checkers_demo():
     game = Checkers()
     state = game.get_starting_state()
     while True:
         moves = game.get_moves(state)
         move = random.choice(moves)
         state = game.make_move(state, move)
-        BRUH = deepcopy(state)
-
-        if state.get_player() == CheckersPlayer.WHITE:
-            state.active_player = CheckersPlayer.BLACK
-        else:
-            state.active_player = CheckersPlayer.WHITE
 
         system("clear")
         print(state.board)
@@ -59,31 +48,57 @@ def play_checkers():
         print(move)
 
         if game.is_terminal(state):
-            game.make_move(BRUH, move)
             print(game.reward(state))
             break
 
 
+def play_verus_mcts():
+    state = game.get_starting_state()
+
+    while game.is_terminal(state) is False:
+        system("clear")
+        print(state.board)
+        sleep(1)
+
+        move = mcts1.mcts_search(state)
+        state = game.make_move(state, move)
+
+        system("clear")
+        print(state.board)
+        print(f"MCTS move: {move}")
+        sleep(1)
+
+        player_move = input("Your Move: ")
+        state = game.make_move(state, player_move)
+
+def mects_vs_random():
+    state = game.get_starting_state()
+
+    while game.is_terminal(state) is False:
+        move = mcts1.mcts_search(state)
+        state = game.make_move(state, move)
+        system("clear")
+        print(state.board)
+        print(f"MCTS move: {move}")
+        sleep(2)
+
+        move = random.choice(game.get_moves(state))
+        state = game.make_move(state, move)
+        system("clear")
+        print(state.board)
+        print(f"Random move: {move}")
+        sleep(2)
+
+
+
 def main():
-    # os.system("clear")
-    # game_state = ttt.get_starting_state()
-
-    # while (True):
-    #     # get mcts move
-
-    #     move = mcts1.mcts_search(game_state)
-    #     print(f"MCTS move: {move}")
-    #     ttt.make_move(game_state, move)
-    #     ttt.print_board(game_state)
-    #     player_move = input("Your Move: ")
-    #     os.system("clear")
-    #     game_state = ttt.make_move(game_state, player_move)
-    # outcomes = []
+    ## outcomes = []
     # for _ in tqdm(range(100)):
-    #     outcomes.append(run_sim())
+    #   outcomes.append(run_sim())
     # print(Counter(outcomes))
-    play_checkers()
 
+    play_verus_mcts()
+    # play_verus_mcts()
 
 if __name__ == "__main__":
     main()
