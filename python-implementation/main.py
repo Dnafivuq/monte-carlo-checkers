@@ -52,7 +52,7 @@ def checkers_demo():
             break
 
 
-def play_verus_mcts():
+def play_versus_mcts():
     state = game.get_starting_state()
 
     while game.is_terminal(state) is False:
@@ -71,7 +71,7 @@ def play_verus_mcts():
         player_move = input("Your Move: ")
         state = game.make_move(state, player_move)
 
-def mects_vs_random():
+def mcts_vs_random():
     state = game.get_starting_state()
 
     while game.is_terminal(state) is False:
@@ -81,6 +81,8 @@ def mects_vs_random():
         print(state.board)
         print(f"MCTS move: {move}")
         sleep(2)
+        if game.is_terminal(state):
+            break
 
         move = random.choice(game.get_moves(state))
         state = game.make_move(state, move)
@@ -97,8 +99,8 @@ def main():
     #   outcomes.append(run_sim())
     # print(Counter(outcomes))
 
-    play_verus_mcts()
-    # play_verus_mcts()
+    # play_versus_mcts()
+    mcts_vs_random()
 
 if __name__ == "__main__":
     main()
