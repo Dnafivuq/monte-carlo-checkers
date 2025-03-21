@@ -245,3 +245,4 @@ class Checkers(GameSimulation):
             state.active_player = CheckersPlayer.BLACK
         else:
             state.active_player = CheckersPlayer.WHITE
+        return state
