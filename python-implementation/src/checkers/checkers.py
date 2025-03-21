@@ -192,48 +192,48 @@ class Checkers(GameSimulation):
             if opposite:
                 return white_pieces
             return black_pieces
-        
+            
     def make_move(self, game_state: CheckersState, move: Move) -> CheckersState:
-        # if we got here, we assume the move is a LEGAL one!
-
-        # setup things to make code player-agnostic
-        queen_piece = CheckersPiece.WHITE_QUEEN
-        pawn_piece = CheckersPiece.WHITE
+        """
+        Performs move on given state and returns new one.
+        Works only for valid moves.
+        """
         promotion_fields = [0, 1, 2, 3]
+        queen_piece = CheckersPiece.WHITE_QUEEN
         if game_state.get_player() == CheckersPlayer.BLACK:
             queen_piece = CheckersPiece.BLACK_QUEEN
-            pawn_piece = CheckersPiece.BLACK
             promotion_fields = [28, 29, 30, 31]
 
-        # if move doesn't contain 'x', that means no capture took place.
+        # No capture
         if 'x' not in move:
             move_fields = move.split('-')
-            # non-jump move can only have 2 fields, subtract one from each to make them indexes
             start_field_idx, final_field_idx = tuple(map(lambda x: int(x), move_fields))
 
-            if game_state.board.get_piece(start_field_idx) == queen_piece or final_field_idx in promotion_fields:
-                game_state.board.set_piece(final_field_idx, queen_piece)
-            else:
-                game_state.board.set_piece(final_field_idx, pawn_piece)
-
-            game_state.board.set_piece(start_field_idx, CheckersPiece.EMPTY)
-            return game_state
+        # Capture
         else:
             move_fields = move.split('x')
             start_field_idx, *mid_fields_idx, final_field_idx = tuple(map(lambda x: int(x), move_fields))
-
-            # at least one jump took place. Remove pieces from fields which were hopped over.
             fields_inbetween = []
             for i in range(len(move_fields)-1):
                 fields_inbetween += self._get_inbetween_fields(game_state, int(move_fields[i]), int(move_fields[i+1]))
             for field in fields_inbetween:
                 game_state.board.set_piece(field, CheckersPiece.EMPTY)
 
+        # Set new piece 
+        if final_field_idx in promotion_fields:
+            game_state.board.set_piece(final_field_idx, queen_piece)
+        else:
             game_state.board.set_piece(final_field_idx, game_state.board.get_piece(start_field_idx))
-            game_state.board.set_piece(start_field_idx, CheckersPiece.EMPTY)
-        
+        game_state.board.set_piece(start_field_idx, CheckersPiece.EMPTY)
+
+        # Switch turn
+        if game_state.get_player() == CheckersPlayer.WHITE:
+            game_state.active_player = CheckersPlayer.BLACK
+        else:
+            game_state.active_player = CheckersPlayer.WHITE
+
         return game_state
-        
+       
     def _get_inbetween_fields(self, state: CheckersState, start_field: int, final_field: int) -> int:
         for dir_pair in [[0, 3], [3, 0], [1, 2], [2, 1]]:
             dir1, dir2 = dir_pair[0], dir_pair[1]
