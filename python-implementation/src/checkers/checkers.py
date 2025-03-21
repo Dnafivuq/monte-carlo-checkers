@@ -209,11 +209,13 @@ class Checkers(GameSimulation):
         if 'x' not in move:
             move_fields = move.split('-')
             start_field_idx, final_field_idx = tuple(map(lambda x: int(x), move_fields))
+            start_piece = game_state.board.get_piece(start_field_idx)
 
         # Capture
         else:
             move_fields = move.split('x')
             start_field_idx, *mid_fields_idx, final_field_idx = tuple(map(lambda x: int(x), move_fields))
+            start_piece = game_state.board.get_piece(start_field_idx)
             fields_inbetween = []
             for i in range(len(move_fields)-1):
                 fields_inbetween += self._get_inbetween_fields(game_state, int(move_fields[i]), int(move_fields[i+1]))
@@ -224,7 +226,7 @@ class Checkers(GameSimulation):
         if final_field_idx in promotion_fields:
             game_state.board.set_piece(final_field_idx, queen_piece)
         else:
-            game_state.board.set_piece(final_field_idx, game_state.board.get_piece(start_field_idx))
+            game_state.board.set_piece(final_field_idx, start_piece)
         game_state.board.set_piece(start_field_idx, CheckersPiece.EMPTY)
 
         # Switch player
